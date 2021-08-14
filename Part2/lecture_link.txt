@@ -1,1 +1,7 @@
-https://medium.com/p/3f561cfcaaf8/edit 
+This part includes the source codes about 
+
+- Non Linear Spatial Filtering (Min, Max, Median)
+
+- Linear Spatial Filtering (Smoothing and Sharpening Filters)
+
+You can reach more detailed informations in that post: https://medium.com/p/3f561cfcaaf8/edit 
