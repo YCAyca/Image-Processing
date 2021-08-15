@@ -50,13 +50,13 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
        
     
     pad_w = padding_size[0]
-    pad_h = padding_size[1]   
+    pad_h = padding_size[1]  
+    
+    h = h + pad_h*2
+    w = w + pad_w*2
  
     if print_mode == Print_Mode.ON:
         print("input image with size " + str((h,w)) + "and with padding size" + str(padding_size) + "\n")
-        
-        h = h + pad_h*2
-        w = w + pad_w*2
         
         for i in range(w):
             for j in range(h):
@@ -75,10 +75,10 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
     
     """ apply chosen filter to the input image and create output image"""
     
-    for i in range(w-filter_size[0]+1):
-        for j in range(h-filter_size[1]+1):
-            for a in range(filter_size[0]):
-                for b in range(filter_size[1]):
+    for i in range(w-filter_size[0]+1): # main border (traveling to left should stop before coming to border - filter_size)
+        for j in range(h-filter_size[1]+1):  # main border (traveling to botto should stop before coming to border - filter_size)
+            for a in range(filter_size[0]): #each tour should be in size of given filter (if kernel is 3x3, we should stop and calculate the minimum,maximum or median after each 3 step to left)
+                for b in range(filter_size[1]): #each tour should be in size of given filter (if kernel is 3x3, we should stop and calculate the  minimum,maximum or median after each 3 step to bottom)
                     window_area.append(image[i+a][j+b])
             if mode == Filter_Type.MIN:  
                 pixel = min(window_area)
@@ -108,12 +108,12 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
 
     return output_image
 
-
-
 """ Test Cases """
 
 """ Test with a 2D list """
-im1 = [[0,0,2,5,50,50,100,150,150], 
+
+def Test_2D_list():
+    im1 = [[0,0,2,5,50,50,100,150,150], 
        [0,10,12,25,15,10,5,200,204],
        [2,1,5,10,100,4,150,178,101],
        [12,10,15,20,101,2,1,5,12],
@@ -124,60 +124,64 @@ im1 = [[0,0,2,5,50,50,100,150,150],
        [10,4,2,0,0,0,50,5,103]]
        
 
-filter_size = (3,3)
+    filter_size = (3,3)
+    
+    input_image = copy.deepcopy(im1)   
+    output_image = nonlinear_filtering(input_image,filter_size, (1,1))
+    
+    input_image = copy.deepcopy(im1)  
+    nonlinear_filtering(input_image,filter_size, (1,1),Filter_Type.MAX)
+    
+    input_image = im1.copy() 
+    nonlinear_filtering(im1,filter_size,(1,1),Filter_Type.MEDIAN)
 
-input_image = copy.deepcopy(im1)   
-output_image = nonlinear_filtering(input_image,filter_size, (1,1))
-
-input_image = copy.deepcopy(im1)  
-nonlinear_filtering(input_image,filter_size, (1,1),Filter_Type.MAX)
-
-input_image = im1.copy() 
-nonlinear_filtering(im1,filter_size,(1,1),Filter_Type.MEDIAN)
 
 
 """ Test with a real image using opencv  to list conversion """
 
-im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-cv2.imshow("input_image", im2)
-cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-w,h = im2.shape
+def Test_Image():
+    im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
+    cv2.imshow("input_image", im2)
+    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    w,h = im2.shape
+    
+    input_image = im2.tolist()
+    output_image = np.array(nonlinear_filtering(input_image,(3,3), (1,1), Filter_Type.MIN, print_mode = Print_Mode.OFF), dtype=np.uint8)
+    cv2.imshow("MIN output_image", output_image)
+    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    
+    input_image = im2.tolist()
+    output_image = np.array(nonlinear_filtering(input_image,(3,3), (1,1), Filter_Type.MAX, print_mode = Print_Mode.OFF), dtype=np.uint8)
+    cv2.imshow("MAX output_image", output_image)
+    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    
+    input_image = im2.tolist()
+    output_image = np.array(nonlinear_filtering(input_image,(3,3), (1,1), Filter_Type.MEDIAN, print_mode = Print_Mode.OFF), dtype=np.uint8)
+    cv2.imshow("MEDIAN output_image", output_image)
+    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    
+    cv2.destroyAllWindows() 
 
-input_image = im2.tolist()
-output_image = np.array(nonlinear_filtering(input_image,filter_size, (1,1), Filter_Type.MIN, print_mode = Print_Mode.OFF), dtype=np.uint8)
-cv2.imshow("MIN output_image", output_image)
-cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-
-input_image = im2.tolist()
-output_image = np.array(nonlinear_filtering(input_image,filter_size, (1,1), Filter_Type.MAX, print_mode = Print_Mode.OFF), dtype=np.uint8)
-cv2.imshow("MAX output_image", output_image)
-cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-
-input_image = im2.tolist()
-output_image = np.array(nonlinear_filtering(input_image,filter_size, (1,1), Filter_Type.MEDIAN, print_mode = Print_Mode.OFF), dtype=np.uint8)
-cv2.imshow("MEDIAN output_image", output_image)
-cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-
-cv2.destroyAllWindows() 
 
 """ Compare the same image with Python's PIL image """
 
-im1 = Image.open("lena.png")
+def PIL_Comparison():
+    im1 = Image.open("lena.png")
    
-# applying the min filter
-im2 = im1.filter(ImageFilter.MinFilter(size = 3))
-im2.show()
-
-# applying the max filter
-im2 = im1.filter(ImageFilter.MaxFilter(size = 3))
-im2.show()
-
-# applying the median filter 
-im2 = im1.filter(ImageFilter.MedianFilter(size = 3)) 
-im2.show()
-
-# applying the median filter to a noisy image 
-
-im1 = Image.open("noisy.jpeg")
-im2 = im1.filter(ImageFilter.MedianFilter(size = 3)) 
-im2.show()
+    # applying the min filter
+    im2 = im1.filter(ImageFilter.MinFilter(size = 3))
+    im2.show()
+    
+    # applying the max filter
+    im2 = im1.filter(ImageFilter.MaxFilter(size = 3))
+    im2.show()
+    
+    # applying the median filter 
+    im2 = im1.filter(ImageFilter.MedianFilter(size = 3)) 
+    im2.show()
+    
+    # applying the median filter to a noisy image 
+    
+    im1 = Image.open("noisy.jpeg")
+    im2 = im1.filter(ImageFilter.MedianFilter(size = 3)) 
+    im2.show()
