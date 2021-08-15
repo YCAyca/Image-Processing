@@ -52,8 +52,8 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
     pad_w = padding_size[0]
     pad_h = padding_size[1]  
     
-    h = h + pad_h*2
-    w = w + pad_w*2
+    h_padded = h + pad_h*2
+    w_padded = w + pad_w*2
  
     if print_mode == Print_Mode.ON:
         print("input image with size " + str((h,w)) + "and with padding size" + str(padding_size) + "\n")
@@ -63,7 +63,7 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
                 print(image[i][j], end=' ')
             print("\n")    
         
-    output_image = [[0 for _ in range(w-filter_size[0]+1)] for _ in range(h-filter_size[1]+1)]
+    output_image = [[0 for _ in range(w_padded-filter_size[0]+1)] for _ in range(h_padded-filter_size[1]+1)]
 
     h2 = len(output_image)
     w2 = len(output_image[0])
@@ -75,8 +75,8 @@ def nonlinear_filtering(image, filter_size, padding_size=None, mode=Filter_Type.
     
     """ apply chosen filter to the input image and create output image"""
     
-    for i in range(w-filter_size[0]+1): # main border (traveling to left should stop before coming to border - filter_size)
-        for j in range(h-filter_size[1]+1):  # main border (traveling to botto should stop before coming to border - filter_size)
+    for i in range(w_padded-filter_size[0]+1): # main border (traveling to left should stop before coming to border - filter_size)
+        for j in range(h_padded-filter_size[1]+1):  # main border (traveling to botto should stop before coming to border - filter_size)
             for a in range(filter_size[0]): #each tour should be in size of given filter (if kernel is 3x3, we should stop and calculate the minimum,maximum or median after each 3 step to left)
                 for b in range(filter_size[1]): #each tour should be in size of given filter (if kernel is 3x3, we should stop and calculate the  minimum,maximum or median after each 3 step to bottom)
                     window_area.append(image[i+a][j+b])
