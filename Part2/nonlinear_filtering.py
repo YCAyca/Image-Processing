@@ -185,3 +185,10 @@ def PIL_Comparison():
     im1 = Image.open("noisy.jpeg")
     im2 = im1.filter(ImageFilter.MedianFilter(size = 3)) 
     im2.show()
+
+    
+ 
+Test_2D_list()
+Test_Image()
+PIL_Comparison()
+    
