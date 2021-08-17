@@ -1,17 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Sun Aug 15 15:13:46 2021
-
-@author: aktas
-"""
 import copy
 from nonlinear_filtering import padding, Print_Mode
 import cv2
 import numpy as np
 from enum import Enum
-import numpy as np
 import scipy.stats as st
-
 
 
 class OPERATION_TYPE(Enum):
@@ -31,6 +23,7 @@ def rotate_180(kernel):
         for y in range(n-1, x-1, -1):
             kernel[x][y], kernel[y][x] = kernel[y][x], kernel[x][y]        
     return(kernel)        
+
 
 def linear_filtering(image, kernel, padding_size=None, mode=OPERATION_TYPE.Correlation, print_mode = Print_Mode.ON):
     h = len(image)
@@ -133,114 +126,13 @@ def gkern(kernlen=11, nsig=1):
     kern2d = np.outer(kern1d, kern1d)
     return (kern2d/kern2d.sum()).tolist()
     
-def Smoothing():
-    gaussian1 = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]
-    gaussian1 = [[element / 16 for element in sub_gaussian] for sub_gaussian in gaussian1]
- 
-    im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-    cv2.imshow("input_image", im2)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-   
-    
-    input_image = im2.tolist()
-    output_image = np.array(linear_filtering(input_image,gaussian1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    cv2.imshow("3X3 Gaussian Blur Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    
-    
-    gaussian2 = [[1, 4, 7, 4 ,1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4 ,1]]
-    gaussian2 = [[element / 273 for element in sub_gaussian] for sub_gaussian in gaussian2]
-    
-    input_image = im2.tolist()
-    output_image = np.array(linear_filtering(input_image,gaussian2, (2,2), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    cv2.imshow("5X5 Gaussian Blur Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    
-    gaussian3 = gkern(11,1)
-    input_image = im2.tolist()
-    output_image = np.array(linear_filtering(input_image,gaussian3, (5,5), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    cv2.imshow("11x11 Gaussian Blur Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-        
-    cv2.destroyAllWindows() 
-    
-def Opencv_Smoothing():
-    img = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-    img = cv2.GaussianBlur(img,(11,11),1)    
-    cv2.imshow("11X11 Gaussian Blur Output Image", img)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    cv2.destroyAllWindows() 
-    
-def UnsharpMask_Sharpening(blur_kernel_size, k):
-    """Blur Step"""
-    gaussian_kernel = gkern(blur_kernel_size,1)
-    
-    padding_size = int((blur_kernel_size - 1) / 2)
-      
-    im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-    
-    input_image = im2.tolist()
-    tmp = copy.deepcopy(input_image)   
-   
-    blurred_image = np.array(linear_filtering(tmp,gaussian_kernel, (padding_size,padding_size), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    
-    mask = np.subtract(im2, blurred_image)
-    
-    weighted_mask = [[element * k for element in sub_mask] for sub_mask in mask]
-    
-    output_image = np.add(input_image,weighted_mask)
-        
-    output_image = np.array(output_image, dtype=np.uint8)
-    cv2.imshow("Unsharp Masking", output_image)
-    cv2.waitKey(0) 
-        
-    cv2.destroyAllWindows()     
-    
-    
-def Opencv_UnsharpMask_Sharpening(blur_kernel_size,k):
-    img = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-    img_blurred = cv2.GaussianBlur(img,(blur_kernel_size,blur_kernel_size),1)
-    mask = cv2.addWeighted(img, 1, img_blurred, -1, 0)  #input_image - blurred_image
-    output_image = cv2.addWeighted(img, 1, mask, k, 0)  # input_image + k * mask
-    
-    cv2.imshow("Opencv Unsharp Masking", output_image)
-    cv2.waitKey(0) 
-        
-    cv2.destroyAllWindows()   
-
-def HighPass_Sharpening():   
-    kernel1 = [[-1, -1, -1],[-1,  8, -1],[-1, -1, -1]]
-    kernel2 = [[-1, -1, -1, -1, -1], [-1,  1,  2,  1, -1],[-1,  2,  4,  2, -1],[-1,  1,  2,  1, -1], [-1, -1, -1, -1, -1]]
-   
-    im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE) 
-    cv2.imshow("input_image", im2)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-   
-    
-    input_image = im2.tolist()
-    output_image = np.array(linear_filtering(input_image,kernel1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    cv2.imshow("High Pass 3x3 Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    
-    input_image = im2.tolist()
-    output_image = np.array(linear_filtering(input_image,kernel1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
-    cv2.imshow("High Pass 5x5  Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    
-    cv2.destroyAllWindows()   
-   
-def Mean_Filter(kernel_size):
+     
+def Mean_Filter(img, kernel_size):
     kernel = [[1/kernel_size**2 for _ in range(kernel_size)] for _ in range(kernel_size)]
-    
-    im2 = cv2.imread("noisy.jpeg", cv2.IMREAD_GRAYSCALE) 
-    cv2.imshow("input_image", im2)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    input_image = im2.tolist()
     padding_size = int((kernel_size - 1) /2) 
-    output_image = np.array(linear_filtering(input_image,kernel, (padding_size,padding_size), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+    output_image = np.array(linear_filtering(img,kernel, (padding_size,padding_size), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
     cv2.imshow("Mean Filter  Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
-    
+    cv2.waitKey(0) 
     cv2.destroyAllWindows() 
     
 
@@ -251,14 +143,14 @@ def Edge_Detection(kernel):
     im2 = cv2.imread("cameraman.tif", cv2.IMREAD_GRAYSCALE) 
     input_image = im2.tolist()
     
-    # gaussian2 = [[1, 4, 7, 4 ,1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4 ,1]]
-    # gaussian2 = [[element / 273 for element in sub_gaussian] for sub_gaussian in gaussian2]
-    # blurred = linear_filtering(input_image,gaussian2, (2,2), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF)
+    gaussian2 = [[1, 4, 7, 4 ,1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4 ,1]]
+    gaussian2 = [[element / 273 for element in sub_gaussian] for sub_gaussian in gaussian2]
+    blurred = linear_filtering(input_image,gaussian2, (2,2), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF)
     
     
     output_image = np.array(linear_filtering(input_image,kernel, (padding_size,padding_size), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
     cv2.imshow("Edge_Detection Output Image", output_image)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    cv2.waitKey(0) 
     cv2.destroyAllWindows()
     
     
@@ -272,7 +164,7 @@ def FirstDerivative_Opencv():
     img_sobel = img_sobelx + img_sobely
     
     cv2.imshow("Sobel 5x5 Opencv Output", img_sobel)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    cv2.waitKey(0) 
       
     """Prewitt"""
     kernelx = np.array([[1,1,1],[0,0,0],[-1,-1,-1]])
@@ -283,7 +175,7 @@ def FirstDerivative_Opencv():
     img_prewitt = img_prewittx + img_prewitty
     
     cv2.imshow("Prewitt 5x5 Opencv Output", img_prewitt)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    cv2.waitKey(0)
     cv2.destroyAllWindows()
     
 def SecondDerivative_Opencv(): 
@@ -291,55 +183,145 @@ def SecondDerivative_Opencv():
     img_gaussian = cv2.GaussianBlur(img,(3,3),0)
     laplacian = cv2.Laplacian(img_gaussian,cv2.CV_8U,ksize=5) 
     cv2.imshow("Laplacian 5x5 Opencv Output", laplacian)
-    cv2.waitKey(0) # Press a key, not x (cross) button on coming window
+    cv2.waitKey(0) 
     cv2.destroyAllWindows()
    
-#Smoothing()   
-#Opencv_Smoothing()
-#UnsharpMask_Sharpening(5,2)
-#Opencv_UnsharpMask_Sharpening(5,2)
-#HighPass_Sharpening()
-# Mean_Filter(3)
-# Mean_Filter(9)
-# Mean_Filter(25)  
+    
+""" Smoothing """
 
-"""Prewitt Kernels"""
+im2 = cv2.imread("lena.png", cv2.IMREAD_GRAYSCALE)
 
-# prewitt3x = [[-1, -1, -1], [0, 0, 0], [1, 1, 1]]
-# prewitt3y = [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]
+gaussian1 = [[1, 2, 1], [2, 4, 2], [1, 2, 1]]
+gaussian1 = [[element / 16 for element in sub_gaussian] for sub_gaussian in gaussian1]
 
-# prewitt5x = [[-2, -2, -2, -2, -2], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0], [1, 1, 1, 1, 1],  [2, 2, 2, 2, 2]]
-# prewitt5y = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
+gaussian2 = [[1, 4, 7, 4 ,1], [4, 16, 26, 16, 4], [7, 26, 41, 26, 7], [4, 16, 26, 16, 4], [1, 4, 7, 4 ,1]]
+gaussian2 = [[element / 273 for element in sub_gaussian] for sub_gaussian in gaussian2]
+    
 
-# First_Derivative(prewitt3x)
-# First_Derivative(prewitt3y)
+input_image = im2.tolist()
+output_image = np.array(linear_filtering(input_image,gaussian1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+cv2.imshow("3X3 Gaussian Blur Output Image", output_image)
+cv2.waitKey(0) 
+    
+input_image = im2.tolist()
+output_image = np.array(linear_filtering(input_image,gaussian2, (2,2), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+cv2.imshow("5X5 Gaussian Blur Output Image", output_image)
+cv2.waitKey(0) 
+    
+gaussian3 = gkern(11,1)
+input_image = im2.tolist()
+output_image = np.array(linear_filtering(input_image,gaussian3, (5,5), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+cv2.imshow("11x11 Gaussian Blur Output Image", output_image)
+cv2.waitKey(0) 
+        
+cv2.destroyAllWindows() 
 
-# First_Derivative(prewitt5x)
-# First_Derivative(prewitt5y)
+
+""" OpenCV Smoothing """
+
+img = cv2.GaussianBlur(im2,(11,11),1)    
+cv2.imshow("11X11 Opencv Gaussian Blur Output Image", img)
+cv2.waitKey(0) 
+cv2.destroyAllWindows() 
+ 
+   
+""" Unsharp Mask & High Boosting """ 
+
+gaussian_kernel = gkern(5,1)
+k = 2
+padding_size = int((5 - 1) / 2)
+      
+input_image = im2.tolist()
+tmp = copy.deepcopy(input_image)   
+   
+blurred_image = np.array(linear_filtering(tmp,gaussian_kernel, (padding_size,padding_size), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+mask = np.subtract(im2, blurred_image)
+weighted_mask = [[element * k for element in sub_mask] for sub_mask in mask]
+output_image = np.add(input_image,weighted_mask)
+output_image = np.array(output_image, dtype=np.uint8)
+cv2.imshow("Unsharp Masking", output_image)
+cv2.waitKey(0) 
+cv2.destroyAllWindows()  
+
+""" OpenCV Unsharp Mask & High Boosting """
+ 
+img_blurred = cv2.GaussianBlur(img,(5,5),1)
+mask = cv2.addWeighted(img, 1, img_blurred, -1, 0)  #input_image - blurred_image
+output_image = cv2.addWeighted(img, 1, mask, k, 0)  # input_image + k * mask
+    
+cv2.imshow("Opencv Unsharp Masking", output_image)
+cv2.waitKey(0) 
+cv2.destroyAllWindows()   
 
 
-"""Sobel Kernels"""
 
-# sobel3x = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
-# sobel3y = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+""" HighPass Sharpening """
 
-# sobel5x = [[-2, -2, -4, -2, -2], [-1, -1, -2, -1, -1], [0, 0, 0, 0, 0], [1, 1, 2, 1, 1],  [2, 2, 4, 2, 2]]
-# sobel5y = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-4, -2, 0, 2, 4], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
+kernel1 = [[-1, -1, -1],[-1,  8, -1],[-1, -1, -1]]
+kernel2 = [[-1, -1, -1, -1, -1], [-1,  1,  2,  1, -1],[-1,  2,  4,  2, -1],[-1,  1,  2,  1, -1], [-1, -1, -1, -1, -1]]
+   
+input_image = im2.tolist()
+output_image = np.array(linear_filtering(input_image,kernel1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+cv2.imshow("High Pass 3x3 Output Image", output_image)
+cv2.waitKey(0) 
+    
+input_image = im2.tolist()
+output_image = np.array(linear_filtering(input_image,kernel1, (1,1), mode=OPERATION_TYPE.Convolution, print_mode = Print_Mode.OFF), dtype=np.uint8)
+cv2.imshow("High Pass 5x5  Output Image", output_image)
+cv2.waitKey(0)
+    
+cv2.destroyAllWindows()   
 
-# Edge_Detection(sobel3x)
-# Edge_Detection(sobel3y)
+"""  Noise Removal Mean Filter """
 
-# Edge_Detection(sobel5x)
-# Edge_Detection(sobel5y)
+im2 = cv2.imread("noisy.jpeg", cv2.IMREAD_GRAYSCALE)
+input_image = im2.tolist()
+Mean_Filter(input_image,3)
+input_image = im2.tolist()
+Mean_Filter(input_image,9)
+input_image = im2.tolist()
+Mean_Filter(input_image,25)
 
-#FirstDerivative_Opencv()
+""" Edge Detection """
+
+"""1) Prewitt Kernels"""
+
+prewitt3x = [[-1, -1, -1], [0, 0, 0], [1, 1, 1]]
+prewitt3y = [[-1, 0, 1], [-1, 0, 1], [-1, 0, 1]]
+
+prewitt5x = [[-2, -2, -2, -2, -2], [-1, -1, -1, -1, -1], [0, 0, 0, 0, 0], [1, 1, 1, 1, 1],  [2, 2, 2, 2, 2]]
+prewitt5y = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
+
+Edge_Detection(prewitt3x)
+Edge_Detection(prewitt3y)
+
+Edge_Detection(prewitt5x)
+Edge_Detection(prewitt5y)
+
+
+""" 2) Sobel Kernels"""
+
+sobel3x = [[-1, -2, -1], [0, 0, 0], [1, 2, 1]]
+sobel3y = [[-1, 0, 1], [-2, 0, 2], [-1, 0, 1]]
+
+sobel5x = [[-2, -2, -4, -2, -2], [-1, -1, -2, -1, -1], [0, 0, 0, 0, 0], [1, 1, 2, 1, 1],  [2, 2, 4, 2, 2]]
+sobel5y = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2], [-4, -2, 0, 2, 4], [-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
+
+Edge_Detection(sobel3x)
+Edge_Detection(sobel3y)
+
+Edge_Detection(sobel5x)
+Edge_Detection(sobel5y)
+
+FirstDerivative_Opencv()
 
 """Laplacian Kernels"""
 
-# laplacien1 = [[0, 1, 0], [1, -4, 1], [0, 1, 0]]
-# laplacien2 = [[1, 1, 1], [1, -8, 1], [1, 1, 1]]
+laplacien1 = [[0, 1, 0], [1, -4, 1], [0, 1, 0]]
+laplacien2 = [[1, 1, 1], [1, -8, 1], [1, 1, 1]]
 
-# Edge_Detection(laplacien1)
-# Edge_Detection(laplacien2)
+Edge_Detection(laplacien1)
+Edge_Detection(laplacien2)
 
-#SecondDerivative_Opencv()
+SecondDerivative_Opencv()
+
